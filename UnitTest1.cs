@@ -23,6 +23,19 @@ namespace PlaywrighNunit
             _productsPage = new ProductsPage(Page);
         }
 
+        public override BrowserNewContextOptions ContextOptions()
+        {
+            return new BrowserNewContextOptions()
+            {
+                RecordVideoDir = "../../../videos/",
+                RecordVideoSize = new RecordVideoSize
+                {
+                    Height = 720,
+                    Width = 1280
+                }
+            };
+        }
+
         [Test]
         public async Task AddProductToTheCart()
         {
