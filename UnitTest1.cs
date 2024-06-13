@@ -15,14 +15,6 @@ namespace PlaywrighNunit
         private readonly CartPageLocators _cart_page_locators = new CartPageLocators();
         private readonly string _locked_user_login = "locked_out_user";
 
-        [SetUp]
-        public void Setup()
-        {
-            _loginPage = new LoginPage(Page);
-            _cartPage = new CartPage(Page);
-            _productsPage = new ProductsPage(Page);
-        }
-
         public override BrowserNewContextOptions ContextOptions()
         {
             return new BrowserNewContextOptions()
@@ -34,6 +26,34 @@ namespace PlaywrighNunit
                     Width = 1280
                 }
             };
+        }
+
+        [SetUp]
+        public async Task Setup()
+        {
+            await Context.Tracing.StartAsync(new()
+            {
+                Title = TestContext.CurrentContext.Test.ClassName + "." + TestContext.CurrentContext.Test.Name,
+                Screenshots = true,
+                Snapshots = true,
+                Sources = true
+            });
+
+            _loginPage = new LoginPage(Page);
+            _cartPage = new CartPage(Page);
+            _productsPage = new ProductsPage(Page);
+        }
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            await Context.Tracing.StopAsync(new()
+            {
+                Path = Path.Combine(
+                    "../../../playwright-traces",
+                    $"{TestContext.CurrentContext.Test.ClassName}.{TestContext.CurrentContext.Test.Name}.zip"
+                )
+            });
         }
 
         [Test]
