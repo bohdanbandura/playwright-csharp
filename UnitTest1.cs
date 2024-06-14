@@ -3,6 +3,7 @@ using PlaywrighNunit.Locators;
 using Microsoft.Playwright.NUnit;
 using NUnit.Framework.Legacy;
 using PlaywrighNunit.Pages;
+using PlaywrighNunit.Helpers;
 
 namespace PlaywrighNunit
 {
@@ -11,8 +12,9 @@ namespace PlaywrighNunit
         private LoginPage _loginPage;
         private CartPage _cartPage;
         private ProductsPage _productsPage;
-        private readonly ProductsPageLocators _products_page_locators = new ProductsPageLocators();
-        private readonly CartPageLocators _cart_page_locators = new CartPageLocators();
+        private readonly LoginPageLocators _login_page_locators = new();
+        private readonly ProductsPageLocators _products_page_locators = new();
+        private readonly CartPageLocators _cart_page_locators = new();
         private readonly string _locked_user_login = "locked_out_user";
 
         public override BrowserNewContextOptions ContextOptions()
@@ -47,12 +49,9 @@ namespace PlaywrighNunit
         [TearDown]
         public async Task TearDown()
         {
-            await Context.Tracing.StopAsync(new()
-            {
-                Path = Path.Combine(
-                    "../../../playwright-traces",
-                    $"{TestContext.CurrentContext.Test.ClassName}.{TestContext.CurrentContext.Test.Name}.zip"
-                )
+            await Context.Tracing.StopAsync(new() 
+            { 
+                Path = Path.Combine("../../../playwright-traces", $"{TestContext.CurrentContext.Test.ClassName}.{TestContext.CurrentContext.Test.Name}.zip")
             });
         }
 
@@ -103,7 +102,7 @@ namespace PlaywrighNunit
 
             string[] productNamesZA = await _productsPage.GetProducts();
 
-            CollectionAssert.AreEqual(productNamesAZ.Reverse(), productNamesZA);
+            Assert.That(productNamesZA, Is.EqualTo(productNamesAZ.Reverse()).AsCollection);
         }
 
         [Test]
@@ -111,9 +110,39 @@ namespace PlaywrighNunit
         {
             await _loginPage.Login(_locked_user_login);
 
-            var errorMessage = Page.Locator("h3[data-test=\"error\"]");
+            var errorMessage = Page.Locator(_login_page_locators.errorMessage);
 
             await Expect(errorMessage).ToHaveTextAsync("Epic sadface: Sorry, this user has been locked out.");
+        }
+
+        [Test]
+        public async Task CompareScreenshots()
+        {
+            await Page.GotoAsync("https://www.google.com");
+
+            await Page.ScreenshotAsync(new() { Path = "../../../screenshots/screenshot1.png" });
+
+            await Page.Locator("textarea[name=\"q\"]").FillAsync("qqqq");
+
+            await Page.ScreenshotAsync(new() { Path = "../../../screenshots/screenshot2.png" });
+
+            await Page.PressAsync("textarea[name=\"q\"]", "Enter");
+
+            await Page.ScreenshotAsync(new() { Path = "../../../screenshots/screenshot3.png" });
+
+            await Page.Locator("h3", new PageLocatorOptions { HasText = "QQQQ: Definition, Composition, and Current Ticker" }).ClickAsync();
+
+            await Page.ScreenshotAsync(new() { Path = "../../../screenshots/screenshot4.png" });
+
+            await Page.Locator("li[class=\"header-nav__list-item\"]", new PageLocatorOptions { HasText = "News"}).ClickAsync();
+
+            await Page.ScreenshotAsync(new() { Path = "../../../screenshots/screenshot5.png" });
+
+            ImageComparer.CompareImages("../../../expectedScreenshots/expectedScreenshot1.png", "../../../screenshots/screenshot1.png", "../../../diffScreenshots/diffScreenshot1.png");
+            ImageComparer.CompareImages("../../../expectedScreenshots/expectedScreenshot2.png", "../../../screenshots/screenshot2.png", "../../../diffScreenshots/diffScreenshot2.png");
+            ImageComparer.CompareImages("../../../expectedScreenshots/expectedScreenshot3.png", "../../../screenshots/screenshot3.png", "../../../diffScreenshots/diffScreenshot3.png");
+            ImageComparer.CompareImages("../../../expectedScreenshots/expectedScreenshot4.png", "../../../screenshots/screenshot4.png", "../../../diffScreenshots/diffScreenshot4.png");
+            ImageComparer.CompareImages("../../../expectedScreenshots/expectedScreenshot5.png", "../../../screenshots/screenshot5.png", "../../../diffScreenshots/diffScreenshot5.png");
         }
     }
 }
