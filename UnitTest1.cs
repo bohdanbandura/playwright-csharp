@@ -130,7 +130,7 @@ namespace PlaywrighNunit
 
             await Page.ScreenshotAsync(new() { Path = "../../../screenshots/screenshot3.png" });
 
-            await Page.Locator("h3", new PageLocatorOptions { HasText = "QQQQ: Definition, Composition, and Current Ticker" }).ClickAsync();
+            await Page.Locator("h3", new PageLocatorOptions { HasText = "QQQQ: Definition, Composition, and Current Ticker" }).First.ClickAsync();
 
             await Page.ScreenshotAsync(new() { Path = "../../../screenshots/screenshot4.png" });
 
